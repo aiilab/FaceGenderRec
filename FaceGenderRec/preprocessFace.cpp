@@ -221,7 +221,7 @@ Mat getPreprocessedFace(Mat &srcImg, int desiredFaceWidth, CascadeClassifier &fa
 
     // Find the largest face.
     Rect faceRect;
-    detectLargestObject(srcImg, faceCascade, faceRect);
+    detectLargestObject(srcImg, faceCascade, faceRect);    //¼ì²âÈËÁ³
 	if (faceRect.x>0)
 		cout <<"face detected"<<endl;
     // Check if a face was detected.
@@ -257,7 +257,8 @@ Mat getPreprocessedFace(Mat &srcImg, int desiredFaceWidth, CascadeClassifier &fa
             *storeRightEye = rightEye;
 
         // Check if both eyes were detected.
-        if (leftEye.x >= 0 && rightEye.x >= 0) {
+        if (leftEye.x >= 0 && rightEye.x >= 0) 
+		{
 
             // Make the face image the same size as the training images.
 
@@ -316,18 +317,20 @@ Mat getPreprocessedFace(Mat &srcImg, int desiredFaceWidth, CascadeClassifier &fa
 
             // Use the mask, to remove outside pixels.
             Mat dstImg = Mat(warped.size(), CV_8U, Scalar(128)); // Clear the output image to a default gray.
-            /*
-            namedWindow("filtered");
-            imshow("filtered", filtered);
-            namedWindow("dstImg");
-            imshow("dstImg", dstImg);
-            namedWindow("mask");
-            imshow("mask", mask);
-            */
+            
+          //  namedWindow("filtered");
+          //  imshow("filtered", filtered);
+			
+          //  namedWindow("dstImg");
+           // imshow("dstImg", dstImg);
+			//waitKey();
+           // namedWindow("mask");
+          //  imshow("mask", mask);
+            
             // Apply the elliptical mask on the face.
             filtered.copyTo(dstImg, mask);  // Copies non-masked pixels from filtered to dstImg.
-            //imshow("dstImg", dstImg);
-
+           // imshow("dstImg", dstImg);
+		 	//waitKey();
             return dstImg;
         }
         /*

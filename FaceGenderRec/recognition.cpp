@@ -43,6 +43,7 @@ Ptr<FaceRecognizer> learnCollectedFaces(const vector<Mat> preprocessedFaces, con
     // Use the new FaceRecognizer class in OpenCV's "contrib" module:
     // Requires OpenCV v2.4.1 or later (from June 2012), otherwise the FaceRecognizer will not compile or run!
     model = Algorithm::create<FaceRecognizer>(facerecAlgorithm);
+	
     if (model.empty()) {
         cerr << "ERROR: The FaceRecognizer algorithm [" << facerecAlgorithm << "] is not available in your version of OpenCV. Please update to OpenCV v2.4.1 or newer." << endl;
         exit(1);

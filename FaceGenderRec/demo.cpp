@@ -53,6 +53,9 @@ const int faceHeight = faceWidth;
 
 vector<Mat> images;
 vector<int> labels;
+
+vector<Mat> trainset;
+vector<int> trainlabel;
 string LFWDataPath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\数据集\\LFW\\裁剪\\*.jpg";		// 注意此处必须指明*.jpg
 string LFWRootPath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\数据集\\LFW\\裁剪";		
 
@@ -65,8 +68,8 @@ void main()
 	//labeledLFW 包含：文件名+标记  eg: Aaron_Eckhart_0001.jpg 1 
 	string labelSetFile = "labeledLFW.txt";
 	map<string, int> labelSet;			//文件名和标记一 一映射
-	ifstream fLFW;
-	fLFW.open(labelSetFile.c_str());
+	ifstream fLFW;      //读取硬盘文件到内存
+	fLFW.open(labelSetFile.c_str());    //打开文件
 	string name;
 	int label;
 	while (fLFW>>name>>label)
@@ -74,7 +77,7 @@ void main()
 		labelSet[name] = label;
 	}	
 	//cout <<"the label sample"<<labelSet["Adriana_Lima_0001.jpg"] <<endl;
-	cout <<"The LFW datebase name+label has been stored in the map:labelSet"<<endl;
+	//cout <<"The LFW datebase name+label has been stored in the map:labelSet"<<endl;
 	getTrainingSet(LFWDataPath, labelSet);
 
 	
@@ -83,24 +86,41 @@ void main()
 	cv::waitKey(10);*/
     int  countnum=0;
 	for (unsigned i = 0; i< images.size(); i++)
-	{
-	   
+	{	   
 		 Mat faceimg = images[i];
 		 Rect faceRect;  // Position of detected face.
 		 Rect searchedLeftEye, searchedRightEye; // top-left and top-right regions of the face, where eyes were searched.
 		 Point leftEye, rightEye;    // Position of the detected eyes.
-		 Mat preprocessedFace = getPreprocessedFace(faceimg, faceWidth, faceCascade, eyeCascade1, eyeCascade2, preprocessLeftAndRightSeparately, &faceRect, &leftEye, &rightEye, &searchedLeftEye,		&searchedRightEye);
-		 
-		 if (preprocessedFace.data)
+		 Mat preprocessedFace = getPreprocessedFace(faceimg, faceWidth, faceCascade, eyeCascade1, eyeCascade2, preprocessLeftAndRightSeparately, &faceRect, &leftEye, &rightEye, &searchedLeftEye,		&searchedRightEye);   
+		 cout<<"the data is:"<<preprocessedFace.rows<<endl;
+		
+		 if (preprocessedFace.rows == faceWidth)   //获取训练集和标签
+		{
+			trainset.push_back(preprocessedFace);
+			trainlabel.push_back(labels.at(i));		
+		}	 
+		/* if (preprocessedFace.data)
 		 {
 			countnum++;
 			cout<<"the num is "<<countnum<<endl;
-		 }	 
-	}
+		 }	*/ 		   
+	 }
 		
 
- 	 
 
+			/*以下程序用来测试算法列表
+				vector<String> algorithms;
+				Algorithm::getList(algorithms);
+				cout << "Algorithms: " << algorithms.size() << endl;
+				for (size_t i=0; i < algorithms.size(); i++)
+				 cout << algorithms[i] << endl;
+			*/
+//    "FaceRecognizer.Eigenfaces":  Eigenfaces, also referred to as PCA (Turk and Pentland, 1991).
+//    "FaceRecognizer.Fisherfaces": Fisherfaces, also referred to as LDA (Belhumeur et al, 1997).
+//    "FaceRecognizer.LBPH":        Local Binary Pattern Histograms (Ahonen et al, 2006).	
+	    /***********************************构造并训练分类器************************************************************/
+   	Ptr<FaceRecognizer> model = learnCollectedFaces(trainset,trainlabel,"FaceRecognizer.Fisherfaces");
+		
 	system("pause");
 }
 
@@ -129,7 +149,7 @@ void getTrainingSet(string datapath, map<string, int>labelmap)
 		cout<< "already pushed "<< name <<" label: " <<labelmap[name]<<endl;		
 	}while (_findnext(Handle, &FileInfo) == 0);
 	_findclose(Handle);  
-	cout<< "the imgas size is "<<images.size() <<"\n the labels size is "<< labels.size()<<endl;
+	cout<< "the imges size is "<<images.size() <<"\n the labels size is "<< labels.size()<<endl;
 }
 /****************************************************************************************/
 /*功能：初始化检测器，加载分类器
