@@ -222,8 +222,8 @@ Mat getPreprocessedFace(Mat &srcImg, int desiredFaceWidth, CascadeClassifier &fa
     // Find the largest face.
     Rect faceRect;
     detectLargestObject(srcImg, faceCascade, faceRect);    //¼ì²âÈËÁ³
-	if (faceRect.x>0)
-		cout <<"face detected"<<endl;
+	//if (faceRect.x>0)
+		//cout <<"face detected"<<endl;
     // Check if a face was detected.
     if (faceRect.width > 0) {
 
@@ -289,49 +289,8 @@ Mat getPreprocessedFace(Mat &srcImg, int desiredFaceWidth, CascadeClassifier &fa
             // Note that we use 'w' for the height instead of 'h', because the input face has 1:1 aspect ratio.
             Mat warped = Mat(desiredFaceHeight, desiredFaceWidth, CV_8U, Scalar(128)); // Clear the output image to a default grey.
             warpAffine(gray, warped, rot_mat, warped.size());
-            //imshow("warped", warped);
-
-            // Give the image a standard brightness and contrast, in case it was too dark or had low contrast.
-            if (!doLeftAndRightSeparately) {
-                // Do it on the whole face.
-                equalizeHist(warped, warped);
-            }
-            else {
-                // Do it seperately for the left and right sides of the face.
-                equalizeLeftAndRightHalves(warped);
-            }
-            //imshow("equalized", warped);
-
-            // Use the "Bilateral Filter" to reduce pixel noise by smoothing the image, but keeping the sharp edges in the face.
-            Mat filtered = Mat(warped.size(), CV_8U);
-            bilateralFilter(warped, filtered, 0, 20.0, 2.0);
-            //imshow("filtered", filtered);
-
-            // Filter out the corners of the face, since we mainly just care about the middle parts.
-            // Draw a filled ellipse in the middle of the face-sized image.
-            Mat mask = Mat(warped.size(), CV_8U, Scalar(0)); // Start with an empty mask.
-            Point faceCenter = Point( desiredFaceWidth/2, cvRound(desiredFaceHeight * FACE_ELLIPSE_CY) );
-            Size size = Size( cvRound(desiredFaceWidth * FACE_ELLIPSE_W), cvRound(desiredFaceHeight * FACE_ELLIPSE_H) );
-            ellipse(mask, faceCenter, size, 0, 0, 360, Scalar(255), CV_FILLED);
-            //imshow("mask", mask);
-
-            // Use the mask, to remove outside pixels.
-            Mat dstImg = Mat(warped.size(), CV_8U, Scalar(128)); // Clear the output image to a default gray.
-            
-          //  namedWindow("filtered");
-          //  imshow("filtered", filtered);
-			
-          //  namedWindow("dstImg");
-           // imshow("dstImg", dstImg);
-			//waitKey();
-           // namedWindow("mask");
-          //  imshow("mask", mask);
-            
-            // Apply the elliptical mask on the face.
-            filtered.copyTo(dstImg, mask);  // Copies non-masked pixels from filtered to dstImg.
-           // imshow("dstImg", dstImg);
-		 	//waitKey();
-            return dstImg;
+          
+            return warped;
         }
         /*
         else {

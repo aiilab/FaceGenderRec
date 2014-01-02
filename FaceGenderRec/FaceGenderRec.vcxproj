@@ -76,9 +76,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp" />
     <ClCompile Include="detectObject.cpp" />
     <ClCompile Include="ImageUtils_0.7.cpp" />
+    <ClCompile Include="Main-1.cpp" />
     <ClCompile Include="preprocessFace.cpp" />
     <ClCompile Include="recognition.cpp" />
   </ItemGroup>

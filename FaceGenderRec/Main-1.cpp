@@ -141,7 +141,7 @@ void main()
 		
 			if (preprocessedFace.rows==faceWidth)
 			{
-				cout<<preprocessedFace.channels()<<endl;
+			//	cout<<preprocessedFace.channels()<<endl;
 				rectangle(faceimg,faceRect,cvScalar(0, 255, 0, 0), 1, 8, 0);	
 			//	cv::cvtColor(preprocessedFace,gray,CV_BGRA2GRAY);
 			//	namedWindow("img");
