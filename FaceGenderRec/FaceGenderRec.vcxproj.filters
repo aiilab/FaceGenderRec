@@ -27,7 +27,7 @@
     <ClCompile Include="recognition.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="demo.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
