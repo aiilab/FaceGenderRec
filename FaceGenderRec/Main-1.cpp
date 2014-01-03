@@ -130,52 +130,68 @@ void main()
 	//	cout<<"Trainning is completed!"<<endl;
 	//	model->save("Fisherfaces.yml");
 		model->load("D:\\GitHub\\FaceGenderRec\\FaceGenderRec\\Fisherfaces2nd.yml");
-		int male =0;
-		int female=0;
-		int frame = 0;
-		int divide = 5;  //每多少帧显示一次
+		int male =0;	  //统计每divide帧，男性出现次数
+		int female=0;     //统计每divide帧，女性出现次数
+		int frame = 0;    //对帧计数
+		int divide = 7;  //每多少帧显示一次
+		int flag =3;   //不能定义为0或者1
 	//	string testpath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\GenderTest\\img359.jpg";
 		while(true)
 		{
 			
 			captureDevice>>faceimg;
-			frame++;
+			
 			Mat preprocessedFace = getPreprocessedFace(faceimg, faceWidth, faceCascade, eyeCascade1, eyeCascade2, preprocessLeftAndRightSeparately, &faceRect, &leftEye, &rightEye, &searchedLeftEye,		&searchedRightEye);  
 		
 			if (preprocessedFace.rows==faceWidth)
 			{
-	
+				frame++;
 			//	cout<<preprocessedFace.channels()<<endl;
 				rectangle(faceimg,faceRect,cvScalar(0, 255, 0, 0), 1, 8, 0);	
 			//	cv::cvtColor(preprocessedFace,gray,CV_BGRA2GRAY);
 			//	namedWindow("img");
 			//	imshow("img",testSample);
 			//	waitKey();
+				//保持上次检测结果，直到下一个三帧发生变化
+				if(frame%divide!=0) //非标志帧
+				{
+					switch (flag)
+					{
+						case 0:	putText(faceimg,"Male",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(0,0,255),2,8,false);break;
+						//putText(faceimg,"Male",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(0,0,255),2,8,false);
+						case 1: putText(faceimg,"Female",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(255,0,0),2,8,false);break; 
+						//putText(faceimg,"Female",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(255,0,0),2,8,false);
+					}	
+				}	
 				int predict =1;	
 				predict = model->predict(preprocessedFace);
-				
-				if (predict==0)
+				cout<<" the predict is "<<predict<<endl;
+				switch (predict)
 				{
-					male++;
+					case 0:	male++;break;
 					//putText(faceimg,"Male",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(0,0,255),2,8,false);
-				}
-				else
-				{
-					female++;
+					case 1: female++;break; 
 					//putText(faceimg,"Female",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(255,0,0),2,8,false);
 				}
+				//每divide帧投票决定性别			
 				if (frame%divide==0)
 				{
-					frame=0;
-					if(female>male)
-					{
+					frame=0;			
+					if((female-male)>(divide/2))
+					{	
+						flag=1;
 						putText(faceimg,"Female",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(255,0,0),2,8,false);
 					}
-					else
-						putText(faceimg,"Male",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(0,0,255),2,8,false);
+					if((female-male)<(divide/2))
+					{
+						flag=0;
+						putText(faceimg,"Male",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(0,0,255),2,8,false);	
+					}
+					male=0;
+					female=0;
 				}
 
-			}
+			}							
 				imshow("video",faceimg);
 				if(waitKey(20)==27)		//Waits for a pressed key:ESC
 				{
@@ -190,11 +206,9 @@ void main()
 /****************************************************************************************/
 void getTrainingSet(string datapath, map<string, int>labelmap)
 {
-
 	struct _finddata_t FileInfo;
 	string path=datapath+ "\\*.jpg";
 	long Handle = _findfirst(path.c_str(),&FileInfo);
-
 	if (Handle == -1L)    
 	{        
 		cerr << "can not match the folder path" << endl;        
@@ -202,8 +216,7 @@ void getTrainingSet(string datapath, map<string, int>labelmap)
 	}    
 	do
 	{   
-		string name=FileInfo.name;			//获取文件名
-	
+		string name=FileInfo.name;			//获取文件名	
 		images.push_back(imread(datapath+"\\"+name,CV_LOAD_IMAGE_GRAYSCALE));		
 		labels.push_back(labelmap[name]);
 		cout<< "already pushed "<< name <<" label: " <<labelmap[name]<<endl;		
