@@ -20,7 +20,7 @@ using std::vector;
 void getTrainingSet(string datapath, map<string, int>labelmap);
 //void getTrainingSet(string datapath);
 void initDetectors(CascadeClassifier &faceCascade, CascadeClassifier &eyeCascade1, CascadeClassifier &eyeCascade2);
-
+void initCamera(VideoCapture &videoCapture, int cameraNumber);
 // The Face Recognition algorithm can be one of these and perhaps more, depending on your version of OpenCV, which must be atleast v2.4.1:
 //    "FaceRecognizer.Eigenfaces":  Eigenfaces, also referred to as PCA (Turk and Pentland, 1991).
 //    "FaceRecognizer.Fisherfaces": Fisherfaces, also referred to as LDA (Belhumeur et al, 1997).
@@ -71,9 +71,9 @@ void main()
     CascadeClassifier eyeCascade2;
 	initDetectors(faceCascade, eyeCascade1, eyeCascade2);
 	VideoCapture captureDevice; 
-	captureDevice.open(0);
-	Mat faceimg;
+	initCamera(captureDevice,0);
 	namedWindow("Video",1);
+	Mat faceimg;
 	//labeledLFW 包含：文件名+标记  eg: Aaron_Eckhart_0001.jpg 1 
 	/*map<string, int> labelSet;			//文件名和标记一 一映射
 //	flabel.open("labelfile.txt");
@@ -237,6 +237,7 @@ void getTrainingSet(string datapath, map<string, int>labelmap)
   返回值：无                                                                              */
 /****************************************************************************************/
 // Load the face and 1 or 2 eye detection XML classifiers.
+
 void initDetectors(CascadeClassifier &faceCascade, CascadeClassifier &eyeCascade1, CascadeClassifier &eyeCascade2)
 {
     // Load the Face Detection cascade classifier xml file.
@@ -272,5 +273,20 @@ void initDetectors(CascadeClassifier &faceCascade, CascadeClassifier &eyeCascade
     }
     else
         cout << "Loaded the 2nd Eye Detection cascade classifier [" << eyeCascadeFilename2 << "]." << endl;
+}
+// Get access to the webcam.
+void initCamera(VideoCapture &videoCapture, int cameraNumber)
+{
+    // Get access to the default camera.
+    try {   // Surround the OpenCV call by a try/catch block so we can give a useful error message!
+        videoCapture.open(cameraNumber);
+	} catch (cv::Exception &e) {}
+    if ( !videoCapture.isOpened() ) 
+	{
+        cerr << "ERROR: Could not access the camera!" << endl;
+		system("pause");
+		exit(1);
+	 }	
+    cout << "Loaded camera " << cameraNumber << "." << endl;
 }
 
