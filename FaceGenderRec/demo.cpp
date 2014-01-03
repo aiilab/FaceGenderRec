@@ -18,6 +18,7 @@ using namespace std;
 using namespace cv;
 using std::vector;
 void getTrainingSet(string datapath, map<string, int> labelmap);
+void getTrainingSet(string datapath,int labelflag);
 void initDetectors(CascadeClassifier &faceCascade, CascadeClassifier &eyeCascade1, CascadeClassifier &eyeCascade2);
 
 // The Face Recognition algorithm can be one of these and perhaps more, depending on your version of OpenCV, which must be atleast v2.4.1:
@@ -48,80 +49,57 @@ const char *eyeCascadeFilename2 = "haarcascade_mcs_righteye.xml";       // Good 
 const bool preprocessLeftAndRightSeparately = true;   // Preprocess left & right sides of the face separately, in case there is stronger light on one side.
 
 // Set the desired face dimensions. Note that "getPreprocessedFace()" will return a square face.
-const int faceWidth = 70;
+const int faceWidth = 100;
 const int faceHeight = faceWidth;
 
 vector<Mat> images;
 vector<int> labels;
-
-vector<Mat> trainset;
-vector<int> trainlabel;
-string LFWDataPath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\数据集\\LFW\\裁剪\\*.jpg";		// 注意此处必须指明*.jpg
-string LFWRootPath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\数据集\\LFW\\裁剪";		
-
-void main()
-{
-	CascadeClassifier faceCascade;
+void TrainingTest(string datapath,int trueclass);
+string FemalePath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\face_to_zxw\\female";		// 注意此处必须指明*.jpg
+string MalePath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\face_to_zxw\\male";		
+string MaleTestPath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\face_to_zxw\\male_test";
+string FemaleTestPath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\face_to_zxw\\female_test";
+ Rect faceRect;  // Position of detected face.
+ Rect searchedLeftEye, searchedRightEye; // top-left and top-right regions of the face, where eyes were searched.
+ Point leftEye, rightEye;    // Position of the detected eyes.
+ 	CascadeClassifier faceCascade;
     CascadeClassifier eyeCascade1;
     CascadeClassifier eyeCascade2;
-	initDetectors(faceCascade, eyeCascade1, eyeCascade2);
-	//labeledLFW 包含：文件名+标记  eg: Aaron_Eckhart_0001.jpg 1 
-	string labelSetFile = "labeledLFW.txt";
-	map<string, int> labelSet;			//文件名和标记一 一映射
-	ifstream fLFW;      //读取硬盘文件到内存
-	fLFW.open(labelSetFile.c_str());    //打开文件
-	string name;
-	int label;
-	while (fLFW>>name>>label)
-	{
-		labelSet[name] = label;
-	}	
-	//cout <<"the label sample"<<labelSet["Adriana_Lima_0001.jpg"] <<endl;
-	//cout <<"The LFW datebase name+label has been stored in the map:labelSet"<<endl;
-	getTrainingSet(LFWDataPath, labelSet);
+	Ptr<FaceRecognizer> model = createFisherFaceRecognizer();
+void main()
+{
 
+	initDetectors(faceCascade, eyeCascade1, eyeCascade2);
+
+	//string labelSetFile = "label2k.txt";
+	//map<string, int> labelSet;			//文件名和标记一 一映射
+	//ofstream fbase2k;      //读取硬盘文件到内存
+	//fbase2k.open(labelSetFile.c_str());    //打开文件
+//	string name;
+	//int label;
+//	while (fLFW>>name>>label)
+//	{
+//		labelSet[name] = label;
+//	}	
+	getTrainingSet(MalePath,0);	
+	getTrainingSet(FemalePath,1);
 	
-	/*Mat faceimg=images[2];
-	imshow("faceimg",faceimg);
-	cv::waitKey(10);*/
-    int  countnum=0;
-	for (unsigned i = 0; i< images.size(); i++)
-	{	   
-		 Mat faceimg = images[i];
-		 Rect faceRect;  // Position of detected face.
-		 Rect searchedLeftEye, searchedRightEye; // top-left and top-right regions of the face, where eyes were searched.
-		 Point leftEye, rightEye;    // Position of the detected eyes.
-		 Mat preprocessedFace = getPreprocessedFace(faceimg, faceWidth, faceCascade, eyeCascade1, eyeCascade2, preprocessLeftAndRightSeparately, &faceRect, &leftEye, &rightEye, &searchedLeftEye,		&searchedRightEye);   
-		 cout<<"the data is:"<<preprocessedFace.rows<<endl;
-		
-		 if (preprocessedFace.rows == faceWidth)   //获取训练集和标签
-		{
-			trainset.push_back(preprocessedFace);
-			trainlabel.push_back(labels.at(i));		
-		}	 
 		/* if (preprocessedFace.data)
 		 {
 			countnum++;
 			cout<<"the num is "<<countnum<<endl;
 		 }	*/ 		   
-	 }
-		
-
-
-			/*以下程序用来测试算法列表
-				vector<String> algorithms;
-				Algorithm::getList(algorithms);
-				cout << "Algorithms: " << algorithms.size() << endl;
-				for (size_t i=0; i < algorithms.size(); i++)
-				 cout << algorithms[i] << endl;
-			*/
 //    "FaceRecognizer.Eigenfaces":  Eigenfaces, also referred to as PCA (Turk and Pentland, 1991).
 //    "FaceRecognizer.Fisherfaces": Fisherfaces, also referred to as LDA (Belhumeur et al, 1997).
 //    "FaceRecognizer.LBPH":        Local Binary Pattern Histograms (Ahonen et al, 2006).	
-	    /***********************************构造并训练分类器************************************************************/
-   	Ptr<FaceRecognizer> model = learnCollectedFaces(trainset,trainlabel,"FaceRecognizer.Fisherfaces");
-		
-	system("pause");
+	 cout<<"Start Trainning!"<<endl;
+	 model->train(images,labels);
+	 cout<<"Trainning is completed!"<<endl;
+	 model->save("Fisherfaces2nd.yml");
+	// TrainingTest(MaleTestPath,0);
+	// waitKey();
+	// TrainingTest(FemaleTestPath,1);
+	// waitKey();
 }
 
 
@@ -130,7 +108,7 @@ void main()
   输入：数据库地址，标签map
   返回值：无                                                                              */
 /****************************************************************************************/
-void getTrainingSet(string datapath, map<string, int>labelmap)
+/*void getTrainingSet(string datapath, map<string, int>labelmap)
 {
 
 	struct _finddata_t FileInfo;
@@ -147,6 +125,69 @@ void getTrainingSet(string datapath, map<string, int>labelmap)
 		images.push_back(imread(LFWRootPath+"\\"+name));		
 		labels.push_back(labelmap[name]);
 		cout<< "already pushed "<< name <<" label: " <<labelmap[name]<<endl;		
+	}while (_findnext(Handle, &FileInfo) == 0);
+	_findclose(Handle);  
+	cout<< "the imges size is "<<images.size() <<"\n the labels size is "<< labels.size()<<endl;
+}*/
+void TrainingTest(string datapath,int trueclass)
+{
+
+	struct _finddata_t FileInfo;
+	string path=datapath+ "\\*.jpg";
+	long Handle = _findfirst(path.c_str(),&FileInfo);
+
+	if (Handle == -1L)    
+	{        
+		cerr << "can not match the folder path" << endl;        
+		exit(-1);    
+	}    
+	do
+	{   
+		string name=FileInfo.name;			//获取文件名
+		Mat faceimg =imread(datapath+"\\"+name);	
+		Mat preprocessedFace = getPreprocessedFace(faceimg, faceWidth, faceCascade, eyeCascade1, eyeCascade2, preprocessLeftAndRightSeparately, &faceRect, &leftEye, &rightEye, &searchedLeftEye,		&searchedRightEye);  				
+			if (preprocessedFace.rows==faceWidth)
+			{		
+				int predict =1;	
+				predict = model->predict(preprocessedFace);
+				string result_message = format("Predicted class = %d / Actual class = %d.", predict, trueclass);
+				cout << result_message << endl;
+			}		
+	}while (_findnext(Handle, &FileInfo) == 0);
+	_findclose(Handle);  
+	cout<< "the imges size is "<<images.size() <<"\n the labels size is "<< labels.size()<<endl;
+}
+/****************************************************************************************/
+/*功能：初始化检测器，加载分类器
+  输入：CascadeClassifier &faceCascade, CascadeClassifier &eyeCascade1, CascadeClassifier &eyeCascade2
+  返回值：无                                                                              */
+/****************************************************************************************/
+void getTrainingSet(string datapath,int labelflag)
+{
+
+	struct _finddata_t FileInfo;
+	string path=datapath+ "\\*.jpg";
+	long Handle = _findfirst(path.c_str(),&FileInfo);
+
+	if (Handle == -1L)    
+	{        
+		cerr << "can not match the folder path" << endl;        
+		exit(-1);    
+	}    
+	do
+	{   
+		string name=FileInfo.name;			//获取文件名
+		Mat faceimg =imread(datapath+"\\"+name);	
+		Mat preprocessedFace = getPreprocessedFace(faceimg, faceWidth, faceCascade, eyeCascade1, eyeCascade2, preprocessLeftAndRightSeparately, &faceRect, &leftEye, &rightEye, &searchedLeftEye,		&searchedRightEye);  		
+		if (preprocessedFace.rows==faceWidth)
+		{
+			cout<<"preprocessedFace.channels="<<preprocessedFace.channels()<<";label="<<labelflag<<endl;
+			images.push_back(preprocessedFace);
+			labels.push_back(labelflag);
+		//	namedWindow("face");
+		//    imshow("face",imread(datapath+"\\"+name));
+		//	waitKey();
+		}			
 	}while (_findnext(Handle, &FileInfo) == 0);
 	_findclose(Handle);  
 	cout<< "the imges size is "<<images.size() <<"\n the labels size is "<< labels.size()<<endl;

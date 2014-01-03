@@ -55,10 +55,7 @@ const int faceHeight = faceWidth;
 vector<Mat> images;
 vector<int> labels;
 Mat gray;
-//vector<Mat> trainset;
-//vector<int> trainlabel;
-string DataPath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\GenderTrain";		// 注意此处必须指明*.jpg
-string TestPath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\GenderTest\\*.jpg";		
+
 //ofstream flabel;	
  Rect faceRect;  // Position of detected face.
  Rect searchedLeftEye, searchedRightEye; // top-left and top-right regions of the face, where eyes were searched.
@@ -132,15 +129,22 @@ void main()
 	//	model->train(images,labels);
 	//	cout<<"Trainning is completed!"<<endl;
 	//	model->save("Fisherfaces.yml");
-		model->load("D:\\GitHub\\FaceGenderRec\\FaceGenderRec\\Fisherfaces.yml");
+		model->load("D:\\GitHub\\FaceGenderRec\\FaceGenderRec\\Fisherfaces2nd.yml");
+		int male =0;
+		int female=0;
+		int frame = 0;
+		int divide = 5;  //每多少帧显示一次
 	//	string testpath="C:\\Users\\Eric\\Desktop\\FaceDataBase\\GenderTest\\img359.jpg";
 		while(true)
 		{
+			
 			captureDevice>>faceimg;
+			frame++;
 			Mat preprocessedFace = getPreprocessedFace(faceimg, faceWidth, faceCascade, eyeCascade1, eyeCascade2, preprocessLeftAndRightSeparately, &faceRect, &leftEye, &rightEye, &searchedLeftEye,		&searchedRightEye);  
 		
 			if (preprocessedFace.rows==faceWidth)
 			{
+	
 			//	cout<<preprocessedFace.channels()<<endl;
 				rectangle(faceimg,faceRect,cvScalar(0, 255, 0, 0), 1, 8, 0);	
 			//	cv::cvtColor(preprocessedFace,gray,CV_BGRA2GRAY);
@@ -152,12 +156,25 @@ void main()
 				
 				if (predict==0)
 				{
-					putText(faceimg,"Male",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(0,0,255),2,8,false);
+					male++;
+					//putText(faceimg,"Male",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(0,0,255),2,8,false);
 				}
 				else
 				{
-					putText(faceimg,"Female",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(255,0,0),2,8,false);
+					female++;
+					//putText(faceimg,"Female",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(255,0,0),2,8,false);
 				}
+				if (frame%divide==0)
+				{
+					frame=0;
+					if(female>male)
+					{
+						putText(faceimg,"Female",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(255,0,0),2,8,false);
+					}
+					else
+						putText(faceimg,"Male",cvPoint(faceRect.x+faceRect.width,faceRect.y),FONT_HERSHEY_SIMPLEX,1.0,Scalar(0,0,255),2,8,false);
+				}
+
 			}
 				imshow("video",faceimg);
 				if(waitKey(20)==27)		//Waits for a pressed key:ESC
